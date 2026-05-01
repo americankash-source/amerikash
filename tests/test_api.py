@@ -17,6 +17,12 @@ def test_health_endpoint():
     assert response.json() == {"status": "healthy"}
 
 
+def test_database_health_endpoint():
+    response = client.get("/health/db")
+    assert response.status_code == 200
+    assert response.json()["database"] == "connected"
+
+
 def test_plan_endpoint():
     response = client.post(
         "/plan/",
