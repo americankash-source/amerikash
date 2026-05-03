@@ -45,3 +45,19 @@ def save_financial_plan(db: Session, request: FinancialRequest, result: dict) ->
     db.commit()
     db.refresh(record)
     return record
+
+
+def list_financial_plans(db: Session, user_id: str | None = None, limit: int = 20) -> list[FinancialPlanRecord]:
+    query = select(FinancialPlanRecord).order_by(FinancialPlanRecord.created_at.desc()).limit(limit)
+    if user_id:
+        query = (
+            select(FinancialPlanRecord)
+            .where(FinancialPlanRecord.user_id == user_id)
+            .order_by(FinancialPlanRecord.created_at.desc())
+            .limit(limit)
+        )
+    return list(db.execute(query).scalars().all())
+
+
+def get_financial_plan(db: Session, plan_id: int) -> FinancialPlanRecord | None:
+    return db.get(FinancialPlanRecord, plan_id)
