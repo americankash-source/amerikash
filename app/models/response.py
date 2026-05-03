@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -24,3 +26,16 @@ class FinancialPlanResponse(BaseModel):
     cashflow: CashflowResult
     risk: RiskResult
     investment: InvestmentResult
+
+
+class FinancialPlanHistoryItem(BaseModel):
+    id: int
+    user_id: str
+    income: float
+    expenses: float
+    result: FinancialPlanResponse
+    created_at: datetime
+
+
+class FinancialPlanHistoryResponse(BaseModel):
+    plans: list[FinancialPlanHistoryItem]
