@@ -1,7 +1,37 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models import FinancialPlanRecord
+from app.core.security import create_auth_token, hash_password, verify_password
+from app.db.models import AuthToken, FinancialPlanRecord, User
+from app.models.auth import LoginRequest, RegisterRequest
 from app.models.request import FinancialRequest
+
+
+def get_user_by_email(db: Session, email: str) -> User | None:
+    return db.execute(select(User).where(User.email == email.lower())).scalar_one_or_none()
+
+
+def create_user(db: Session, request: RegisterRequest) -> User:
+    user = User(email=request.email.lower(), password_hash=hash_password(request.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def authenticate_user(db: Session, request: LoginRequest) -> User | None:
+    user = get_user_by_email(db, request.email)
+    if not user or not verify_password(request.password, user.password_hash):
+        return None
+    return user
+
+
+def create_user_token(db: Session, user: User) -> AuthToken:
+    token = AuthToken(user_id=user.id, token=create_auth_token())
+    db.add(token)
+    db.commit()
+    db.refresh(token)
+    return token
 
 
 def save_financial_plan(db: Session, request: FinancialRequest, result: dict) -> FinancialPlanRecord:
