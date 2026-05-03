@@ -70,3 +70,32 @@ def test_login_returns_bearer_token():
     assert data["user"]["email"] == email
     assert "password" not in data
     assert "password_hash" not in data
+
+
+def test_plan_history_returns_saved_plan():
+    user_id = f"history-{uuid4().hex}"
+    with TestClient(app) as client:
+        plan_response = client.post(
+            "/plan/",
+            json={
+                "user_id": user_id,
+                "income": 9000,
+                "expenses": 4500,
+                "goals": ["save", "invest"],
+            },
+        )
+        history_response = client.get(f"/plans/history?user_id={user_id}")
+
+    assert plan_response.status_code == 200
+    assert history_response.status_code == 200
+    plans = history_response.json()["plans"]
+    assert len(plans) >= 1
+    assert plans[0]["user_id"] == user_id
+    assert plans[0]["income"] == 9000
+    assert "investment" in plans[0]["result"]
+
+
+def test_plan_detail_returns_404_for_missing_plan():
+    with TestClient(app) as client:
+        response = client.get("/plans/999999999")
+    assert response.status_code == 404
